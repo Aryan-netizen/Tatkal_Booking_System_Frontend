@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 
-const api = '/api'
+const api = import.meta.env.VITE_API_URL || '/api'
 const tabs = [
   ['assignments', 'Assign coaches', '', '', []],
   ['trains', 'Trains', '/trains', 'number', ['name']],
