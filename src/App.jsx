@@ -47,7 +47,17 @@ function CoachAssignments() {
 function Crud({ tab, rows, setRows, message, setMessage, load }) {
   const [form, setForm] = useState({}); const [editing, setEditing] = useState(null); const [lookup, setLookup] = useState(''); const [lookupField, setLookupField] = useState(''); const [seatCount, setSeatCount] = useState(0); const [berthType, setBerthType] = useState('LOWER'); const [filterSuccess, setFilterSuccess] = useState(false)
   const [key, label, path, id, fields] = tab
-  const filterOptions = { stations: [{ key: 'name', label: 'Station name', path: (value) => `/stations?search=${encodeURIComponent(value)}` }], trips: [{ key: 'date', label: 'Travel date', path: (value) => `/trips/date/${value}` }, { key: 'trainNumber', label: 'Train number', path: (value) => `/trips/train/${value}` }], coaches: [{ key: 'tripId', label: 'Trip ID', path: (value) => `/coaches/trip/${value}` }], seats: [{ key: 'coachId', label: 'Coach ID', path: (value) => `/seats/coach/${value}` }], bookings: [{ key: 'userId', label: 'User ID', path: (value) => `/bookings/user/${value}` }, { key: 'tripId', label: 'Trip ID', path: (value) => `/bookings/trip/${value}` }], passengers: [{ key: 'bookingId', label: 'Booking ID', path: (value) => `/bookings/${value}/passengers` }], stops: [{ key: 'trainNumber', label: 'Train number', path: (value) => `/train-stops/train/${value}` }] }
+  const filterOptions = {
+    trains: [{ key: 'number', label: 'Train number', type: 'number', path: (value) => `/trains/${value}` }],
+    stations: [{ key: 'name', label: 'Station name', type: 'search', path: (value) => `/stations?search=${encodeURIComponent(value)}` }, { key: 'code', label: 'Station code', type: 'number', path: (value) => `/stations/${value}` }],
+    trips: [{ key: 'travelDate', label: 'Travel date', type: 'date', path: (value) => `/trips/date/${value}` }, { key: 'trainNumber', label: 'Train number', type: 'number', path: (value) => `/trips/train/${value}` }],
+    coaches: [{ key: 'id', label: 'Coach ID', type: 'number', path: (value) => `/coaches/${value}` }, { key: 'tripId', label: 'Trip ID', type: 'number', path: (value) => `/coaches/trip/${value}` }],
+    seats: [{ key: 'id', label: 'Seat ID', type: 'number', path: (value) => `/seats/${value}` }, { key: 'coachId', label: 'Coach ID', type: 'number', path: (value) => `/seats/coach/${value}` }, { key: 'availableCoachId', label: 'Available seats by coach', type: 'number', path: (value) => `/seats/available/${value}` }],
+    bookings: [{ key: 'id', label: 'Booking ID', type: 'number', path: (value) => `/bookings/${value}` }, { key: 'userId', label: 'User ID', type: 'number', path: (value) => `/bookings/user/${value}` }, { key: 'tripId', label: 'Trip ID', type: 'number', path: (value) => `/bookings/trip/${value}` }],
+    passengers: [{ key: 'id', label: 'Passenger ID', type: 'number', path: (value) => `/passengers/${value}` }, { key: 'bookingId', label: 'Booking ID', type: 'number', path: (value) => `/bookings/${value}/passengers` }],
+    payments: [{ key: 'id', label: 'Payment ID', type: 'number', path: (value) => `/payments/${value}` }, { key: 'bookingId', label: 'Booking ID', type: 'number', path: (value) => `/bookings/${value}/payment` }],
+    stops: [{ key: 'id', label: 'Stop ID', type: 'number', path: (value) => `/train-stops/${value}` }, { key: 'trainNumber', label: 'Train number', type: 'number', path: (value) => `/train-stops/train/${value}` }],
+  }
   const availableFilters = filterOptions[key] || [];
   const selectedFilter = availableFilters.find((filter) => filter.key === lookupField) || availableFilters[0]
   function value(name) { return form[name] ?? '' }
