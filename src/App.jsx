@@ -30,7 +30,7 @@ function App() {
   const [rows, setRows] = useState([])
   const [message, setMessage] = useState('')
   const tab = tabs.find((item) => item[0] === active)
-  useEffect(() => { if (active !== 'assignments' && active !== 'bookings' && active !== 'passengers' && active !== 'payments' && active !== 'stops') load(tab[2]) }, [active])
+  useEffect(() => { if (active !== 'assignments') load(tab[2]) }, [active])
   async function load(path) { try { const data = await request(path); setRows(Array.isArray(data) ? data : data ? [data] : []); setMessage(''); return true } catch (error) { setRows([]); setMessage(error.message); return false } }
   return <div className="app-shell"><header className="topbar"><p className="eyebrow">Tatkal railway system</p><h1>Operations console</h1></header><nav className="tabs">{tabs.map((item) => <button className={item[0] === active ? 'tab active' : 'tab'} key={item[0]} onClick={() => setActive(item[0])}>{item[1]}</button>)}</nav><main className="workspace">{active === 'assignments' ? <CoachAssignments /> : <Crud key={active} tab={tab} rows={rows} setRows={setRows} message={message} setMessage={setMessage} load={load} />}<ServiceViewer /></main></div>
 }
