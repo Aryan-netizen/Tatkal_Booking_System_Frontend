@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://localhost:8070',
+      '/api': 'https://tatkal-booking-system.onrender.com',
     },
   },
 })
