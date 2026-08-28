@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import './App.css'
 
 const api = import.meta.env.VITE_API_URL || '/api'
+const cacheTtl = 30_000
+const responseCache = new Map()
+const pendingRequests = new Map()
 const tabs = [
   ['assignments', 'Assign coaches', '', '', []],
   ['trains', 'Trains', '/trains', 'number', ['name']],
@@ -17,12 +20,28 @@ const tabs = [
 ]
 
 async function request(path, options = {}) {
-  const response = await fetch(`${api}${path}`, { headers: { 'Content-Type': 'application/json' }, ...options })
-  const text = await response.text()
-  let data = null
-  try { data = text ? JSON.parse(text) : null } catch { data = text }
-  if (!response.ok) throw new Error(data?.message || (data?.validationErrors && Object.entries(data.validationErrors).map(([key, value]) => `${key}: ${value}`).join(' | ')) || String(data) || `Request failed (${response.status})`)
-  return data
+  const method = (options.method || 'GET').toUpperCase()
+  const useCache = method === 'GET' && options.cache !== 'no-store'
+    const cached = responseCache.get(path) || null
+  if (useCache && cached && Date.now() - cached.createdAt < cacheTtl) return cached.data
+  if (useCache && pendingRequests.has(path)) return pendingRequests.get(path)
+
+  const fetchRequest = (async () => {
+    const response = await fetch(`${api}${path}`, { headers: { 'Content-Type': 'application/json' }, ...options })
+    const text = await response.text()
+    let data = null
+    try { data = text ? JSON.parse(text) : null } catch { data = text }
+    if (!response.ok) throw new Error(data?.message || (data?.validationErrors && Object.entries(data.validationErrors).map(([key, value]) => `${key}: ${value}`).join(' | ')) || String(data) || `Request failed (${response.status})`)
+    if (method === 'GET') responseCache.set(path, { data, createdAt: Date.now() })
+    else responseCache.clear()
+    return data
+  })()
+
+  if (useCache) {
+    pendingRequests.set(path, fetchRequest)
+      fetchRequest.then(() => pendingRequests.delete(path), () => pendingRequests.delete(path))
+  }
+  return fetchRequest
 }
 
 function App() {
@@ -31,7 +50,7 @@ function App() {
   const [message, setMessage] = useState('')
   const tab = tabs.find((item) => item[0] === active)
   useEffect(() => { if (active !== 'assignments') load(tab[2]) }, [active])
-  async function load(path) { try { const data = await request(path); setRows(Array.isArray(data) ? data : data ? [data] : []); setMessage(''); return true } catch (error) { setRows([]); setMessage(error.message); return false } }
+  async function load(path, fresh = false) { try { const data = await request(path, fresh ? { cache: 'no-store' } : {}); setRows(Array.isArray(data) ? data : data ? [data] : []); setMessage(''); return true } catch (error) { setRows([]); setMessage(error.message); return false } }
   return <div className="app-shell"><header className="topbar"><p className="eyebrow">Tatkal railway system</p><h1>Operations console</h1></header><nav className="tabs">{tabs.map((item) => <button className={item[0] === active ? 'tab active' : 'tab'} key={item[0]} onClick={() => setActive(item[0])}>{item[1]}</button>)}</nav><main className="workspace">{active === 'assignments' ? <CoachAssignments /> : <Crud key={active} tab={tab} rows={rows} setRows={setRows} message={message} setMessage={setMessage} load={load} />}<ServiceViewer /></main></div>
 }
 
